@@ -1,0 +1,100 @@
+q2)Find the percentage of shipable orders.
+Consider an order is shipable if the customer's address is known.
+
+Tables: orders, customers
+orders Preview
+id:                  int
+cust_id:             int
+order_date:          datetime
+order_details:       varchar
+total_order_cost:    int
+
+customers Preview
+id:                 int
+first_name:         varchar
+last_name:          varchar
+city:               varchar
+address:            varchar
+phone_number:       varchar
+
+SQL SCRIPT
+select count(c.address)/count(o.id)*100 
+as pct from orders o
+left join customers c on o.cust_id=c.id
+
+q3)Find the number of customers without an order.
+SQL SCRIPT
+select count(id) from customers where id not in
+(select distinct(cust_id) from orders)
+
+q4)Find the customer with the highest daily total order cost between 2019-02-01 to 2019-05-01. 
+If customer had more than one order on a certain day, sum the order costs on daily basis. Output customer's first name, 
+total cost of their items, and the date.
+For simplicity, you can assume that every first name in the dataset is unique.
+
+SQL SCRIPT
+select customers.first_name, A.Cost, A.order_date from customers inner join 
+(SELECT sum(total_order_cost) as "Cost", cust_id, order_date FROM orders 
+where order_date between "2019-02-01" and "2019-05-01"
+group by order_date, cust_id) as A on customers.id = A.cust_id order by A.Cost desc limit 1;
+
+q5)
+Find the lowest order cost of each customer.
+Output the customer id along with the first name and the lowest order price.
+
+SQL SCRIPT
+select cust_id,first_name,
+min(total_order_cost) as lowest_order 
+from orders o join customers c 
+on c.id=o.cust_id
+group by cust_id;
+
+q6)
+Find "favorite" customers based on the order count and the total cost of orders.
+A customer is considered as a favorite if he or she has placed more than 3 orders and
+with the total cost of orders more than $100.
+Output the customer's first name, city, number of orders, and total cost of orders.
+
+SQL SCRIPT
+
+with cte as 
+(select cust_id, 
+count(cust_id) as cnt,
+sum(total_order_cost) as ttl 
+from orders
+group by cust_id)
+select cte.cust_id,c.first_name,c.city,cte.cnt,cte.ttl 
+from cte join customers c 
+on c.id= cte.cust_id
+where cnt > 3 and ttl > 100
+
+q7)
+Find the number of orders, the number of customers, and the total cost of orders for each city. 
+Only include cities that have made at least 5 orders and count all customers in each city even if they did not place an order.
+Output each calculation along with the corresponding city name.
+
+SQL SCRIPT
+
+select c.city,
+count(o.id) as Num_orders,
+count(distinct c.id) as Num_customers,
+sum(o.total_order_cost) as Total_cost
+from customers c left outer join orders o
+on o.cust_id=c.id
+group by c.city
+having count(o.id)>=5;
+
+q8)
+Calculate the percentage of the total spend a customer spent on each order. 
+Output the customer’s first name, order details, and percentage 
+of the order cost to their total spend across all orders.
+Assume each customer has a unique first name 
+(i.e., there is only 1 customer named Karen in the dataset)
+and that customers place at most only 1 order a day.
+Percentages should be represented as decimals
+
+select first_name,order_details,total_order_cost/sum(total_order_cost)
+over(partition by first_name) as pct
+from customers c
+inner join orders o 
+on  c.id=o.cust_id
