@@ -1,0 +1,2 @@
+# AMAZON-_SQL_challenges
+stratascratch _amazon_SQL_challenges
