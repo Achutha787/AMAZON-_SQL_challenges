@@ -1,22 +1,45 @@
+Q1)
+Write a query that'll identify returning active users. 
+A returning active user is a user that has made a second purchase 
+within 7 days of any other of their purchases. 
+Output a list of user_ids of these returning active users.
+
+Table:       amazon_transactions
+
+id:          int
+user_id:     int
+item:        varchar
+created_at:  datetime
+revenue:     int
+
+SQL SCRIPT
+
+with result as 
+(select *,
+lead(created_at) over (partition by user_id order by created_at) next_purchase
+from amazon_transactions)
+select distinct(user_id) from result
+where datediff(next_purchase,created_at) <= 7
+
+
 q2)Find the percentage of shipable orders.
 Consider an order is shipable if the customer's address is known.
 
-Tables: orders, customers
-orders Preview
-id:                  int
-cust_id:             int
-order_date:          datetime
-order_details:       varchar
-total_order_cost:    int
+customers  Preview
+id:           int
+first_name:   varchar
+last_name:    varchar
+city:         varchar
+address:      varchar
+phone_number: varchar
 
-customers Preview
-id:                 int
-first_name:         varchar
-last_name:          varchar
-city:               varchar
-address:            varchar
-phone_number:       varchar
-
+orders  Preview
+id:                int
+cust_id:           int
+order_date:        datetime
+order_details:     varchar
+total_order_cost:  int
+ 
 SQL SCRIPT
 select count(c.address)/count(o.id)*100 
 as pct from orders o
